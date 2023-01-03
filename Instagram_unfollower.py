@@ -1,6 +1,7 @@
 from pathlib import Path
 import shelve, bs4, requests, lxml
 from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 
 # GOAL:
 #   - Log into desired Instagram account with user-inputted username and
@@ -38,18 +39,22 @@ print(accounts, "is a valid file")
 
 url = "https://www.instagram.com/jinsen2cold/"
 # Configure res to get webpage in specific manner
-headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:101.0) Gecko/20100101 Firefox/101.0"}
+# headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:101.0) Gecko/20100101 Firefox/101.0"}
 # Get user's insta page
-res = requests.get(url, headers=headers)
+# res = requests.get(url, headers=headers)
 # Check for error
-res.raise_for_status()
+# res.raise_for_status()
 
-soup = bs4.BeautifulSoup(res.text, "lxml")
+# Open browser to user's Instagram page. It will be logged out
+options = Options()
+options.binary_location = r"/Applications/Firefox 2.app/Contents/MacOS/firefox"
+browser = webdriver.Firefox(options=options)
+browser.get(url)
+
+# soup = bs4.BeautifulSoup(res.text, "lxml")
 # Get user's "following"
-# v if logged in
-# following = soup.select("li.xl565be:nth-child(3) > a:nth-child(1) > div:nth-child(1)")
 # v if not logged in
-following = soup.select("li.xl565be:nth-child(3) > button:nth-child(1) > div:nth-child(1)")
+# following = soup.select("li.xl565be:nth-child(3) > button:nth-child(1) > div:nth-child(1)")
 
 file = open(accounts)
 # open(accounts, 'w') for write mode
