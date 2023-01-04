@@ -3,6 +3,7 @@ import shelve, bs4, requests, lxml, time
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 
 # GOAL:
 #   - Log into desired Instagram account with user-inputted username and
@@ -24,6 +25,11 @@ from selenium.webdriver.common.by import By
 print("hello world")
 print(Path.cwd())
 
+username = input("Enter your Instagram username: ")
+# ACCOUNT FOR WEIRD INPUTS
+password = input("Enter your the password for @%s: " %username)
+
+
 accounts = Path.cwd() / "accounts.txt"
 if not accounts.is_file():
     print(accounts, "is NOT a valid file")
@@ -38,19 +44,12 @@ print(accounts, "is a valid file")
 ##accounts.write_text("")
 ##print("Contents of accounts.txt: ", accounts.read_text())
 
-url = "https://www.instagram.com/jinsen2cold/"
-# Configure res to get webpage in specific manner
-# headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:101.0) Gecko/20100101 Firefox/101.0"}
-# Get user's insta page
-# res = requests.get(url, headers=headers)
-# Check for error
-# res.raise_for_status()
+url = ("https://www.instagram.com/%s/" %username)
 
 # Open browser to user's Instagram page. It will be logged out
 options = Options()
 options.binary_location = r"/Applications/Firefox 2.app/Contents/MacOS/firefox"
 browser = webdriver.Firefox(options=options)
-# browser.get(url)
 browser.get(url)
 
 login_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/nav/div[2]/div/div/div[3]/div/div[2]/div[1]/a/button/div"
@@ -68,14 +67,37 @@ for i in range(10):
 if isinstance(login, int):
     print("Unable to find 'Log in' button")
 
+login.click()
+
+username_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/main/div/div/div[1]/div[2]/form/div/div[1]/div/label/input"
+password_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/main/div/div/div[1]/div[2]/form/div/div[2]/div/label/input"
+
+for i in range(10):
+    try:
+        username_field = browser.find_element(By.XPATH, username_XPATH)
+        print("Found username field")
+        password_field = browser.find_element(By.XPATH, password_XPATH)
+        print("Found password field")
+        break
+    except:
+        time.sleep(1)
+
+try:
+    type(username_field)
+    type(password_field)
+except:
+    print("Could not find username field or password field")
+
+username_field.send_keys(username)
+password_field.send_keys(password + Keys.ENTER)
+# ACCOUNT FOR WHEN PASSWORD MAY FAIL
+# Browser will take some time to load next page
+
+# When it asks to save login info:
+not_now_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div/div/div/div/button"
+following_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div/header/section/ul/li[3]"
+
 print("got here")
-
-# print("login not found")
-
-# soup = bs4.BeautifulSoup(res.text, "lxml")
-# Get user's "following"
-# v if not logged in
-# following = soup.select("li.xl565be:nth-child(3) > button:nth-child(1) > div:nth-child(1)")
 
 file = open(accounts)
 # open(accounts, 'w') for write mode
