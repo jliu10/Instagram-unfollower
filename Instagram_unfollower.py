@@ -1,7 +1,8 @@
 from pathlib import Path
-import shelve, bs4, requests, lxml
+import shelve, bs4, requests, lxml, time
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.by import By
 
 # GOAL:
 #   - Log into desired Instagram account with user-inputted username and
@@ -49,7 +50,27 @@ url = "https://www.instagram.com/jinsen2cold/"
 options = Options()
 options.binary_location = r"/Applications/Firefox 2.app/Contents/MacOS/firefox"
 browser = webdriver.Firefox(options=options)
+# browser.get(url)
 browser.get(url)
+
+login_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/nav/div[2]/div/div/div[3]/div/div[2]/div[1]/a/button/div"
+login = 0
+# Wait up to 10 seconds to find login button to account for page loading
+for i in range(10):
+    print("iteration %d" %i)
+    try:
+        login = browser.find_element(By.XPATH, login_XPATH)
+        print("login found")
+        break
+    except:
+        time.sleep(1)
+
+if isinstance(login, int):
+    print("Unable to find 'Log in' button")
+
+print("got here")
+
+# print("login not found")
 
 # soup = bs4.BeautifulSoup(res.text, "lxml")
 # Get user's "following"
