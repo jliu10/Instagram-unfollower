@@ -138,7 +138,7 @@ following.click()
 # following_list_XPATH = "/html/body/div[2]/div/div/div/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div"
 # List of usernames of following accounts
 accounts_list = []
-following_list_XPATH = "//button/div/div[text()='Following'][1]"
+following_list_XPATH = "//button[div/div[text()='Following']]/../../.."
 for i in range(5):
     try:
         following_list = browser.find_element(By.XPATH, following_list_XPATH)
