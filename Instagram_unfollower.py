@@ -18,9 +18,13 @@ from selenium.webdriver.common.keys import Keys
 #   unfollow
 # FEATURES:
 #   - WHITELIST: Whitelist accounts to exempt them from being automatically unfollowed
+#       - Option to automatically whitelist accounts with a certain number of followers 
 #   - CONFIRM: Print list of Guilty accounts, then ask for confirmation to unfollow all
+#       - Ask user if there are any accounts from this list that they would like
+#           to not unfollow, and/or add to whitelist
 #   - Toggle need for CONFIRM (unfollow without asking for confirmation, so
 #       user doesn't have to wait for script to get Guilty accounts)
+#   - Customize timeout length
 
 print("hello world")
 print(Path.cwd())
@@ -52,11 +56,14 @@ options.binary_location = r"/Applications/Firefox 2.app/Contents/MacOS/firefox"
 browser = webdriver.Firefox(options=options)
 browser.get(url)
 
-login_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/nav/div[2]/div/div/div[3]/div/div[2]/div[1]/a/button/div"
+# Find the button whose div contains the text " In", as it could be "Log In" or
+#   "Sign In" in the future
+# login_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/nav/div[2]/div/div/div[3]/div/div[2]/div[1]/a/button/div"
+login_XPATH = "//button/div[contains(text(), ' In')]"
 login = 0
 # Wait up to 10 seconds to find login button to account for page loading
 for i in range(10):
-    print("iteration %d" %i)
+#    print("iteration %d" %i)
     try:
         login = browser.find_element(By.XPATH, login_XPATH)
         print("login found")
@@ -69,8 +76,10 @@ if isinstance(login, int):
 
 login.click()
 
-username_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/main/div/div/div[1]/div[2]/form/div/div[1]/div/label/input"
-password_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/main/div/div/div[1]/div[2]/form/div/div[2]/div/label/input"
+#username_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/main/div/div/div[1]/div[2]/form/div/div[1]/div/label/input"
+username_XPATH = "//input[@name='username']"
+#password_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/main/div/div/div[1]/div[2]/form/div/div[2]/div/label/input"
+password_XPATH = "//input[@name='password']"
 
 for i in range(10):
     try:
@@ -93,9 +102,40 @@ password_field.send_keys(password + Keys.ENTER)
 # ACCOUNT FOR WHEN PASSWORD MAY FAIL
 # Browser will take some time to load next page
 
-# When it asks to save login info:
-not_now_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div/div/div/div/button"
-following_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div/header/section/ul/li[3]"
+# Don't save login info:
+# not_now_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div/div/div/div/button"
+not_now_XPATH = "//button[text()='Not Now']"
+for i in range(10):
+    try:
+        not_now = browser.find_element(By.XPATH, not_now_XPATH)
+        print("Found 'Not Now' button")
+        break
+    except:
+        time.sleep(1)
+
+try:
+    type(not_now)
+except:
+    print("Could not find 'Not Now' button")
+not_now.click()
+
+# following_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div/header/section/ul/li[3]"
+following_XPATH = ("//a[@href='/%s/following/']//child::div" %username)
+for i in range(10):
+    try:
+        following = browser.find_element(By.XPATH, following_XPATH)
+        print("Found 'Following' button")
+        break
+    except:
+        time.sleep(1)
+
+try:
+    type(following)
+except:
+    print("Could not find 'Following' button")
+following.click()
+
+# following_list_XPATH = "/html/body/div[2]/div/div/div/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div"
 
 print("got here")
 
