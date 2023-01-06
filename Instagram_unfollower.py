@@ -179,11 +179,21 @@ js = """
               } else {
                 clearInterval(intervalId);
               }
-        }, 3000);
+        }, 1000);
 """ % following_count
 print("Executing script:\n%s" %js)
 
 browser.execute_script(js)
+
+# List of children of following_list, each representing an account
+try:
+    children = following_list.find_elements(By.XPATH, "./child::div")
+    while len(children) < following_count:
+        time.sleep(1)
+        children = following_list.find_elements(By.XPATH, "./child::div")
+        print("Number of children: %d" %len(children))
+except:
+    print("Could not find children of following_list")
 
 print("got here")
 
