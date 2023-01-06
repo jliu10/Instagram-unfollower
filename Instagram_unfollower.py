@@ -115,24 +115,40 @@ for i in range(10):
 
 try:
     type(not_now)
+    not_now.click()
 except:
     print("Could not find 'Not Now' button")
-not_now.click()
 
-# following_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div/header/section/ul/li[3]"
-following_XPATH = ("//a[@href='/%s/following/']//child::div" %username)
+following_count_XPATH = ("//a[@href='/%s/following/']//child::div/span/span" %username)
 for i in range(10):
     try:
-        following = browser.find_element(By.XPATH, following_XPATH)
-        print("Found 'Following' button")
+        following_count = browser.find_element(By.XPATH, following_count_XPATH)
+        print("Found following count")
         break
     except:
         time.sleep(1)
 
 try:
-    type(following)
+    type(following_count)
+except:
+    print("Could not find following count")
+
+try:
+    # By knowing the following count, we can keep scrolling the following list
+    #   until we revealed this many list child elementts
+    following_count = int(following_count.text)
+    print("Retrieved following count: %d" %following_count)
+except:
+    print("Could not retreive following count")
+
+
+following_XPATH = ("//a[@href='/%s/following/']//child::div" %username)
+try:
+    following = browser.find_element(By.XPATH, following_XPATH)
+    print("Found 'Following' button")
 except:
     print("Could not find 'Following' button")
+
 following.click()
 
 # following_list_XPATH = "/html/body/div[2]/div/div/div/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div"
@@ -151,6 +167,23 @@ try:
     type(following_list)       
 except:
     print("Could not find following list")
+
+# JavaScript to scroll until all following accounts are revealed
+js = """
+        let following_list_XPATH = "//button[div/div[text()='Following']]/../../..";
+	let following_list = document.evaluate(following_list_XPATH, document).iterateNext();
+	let last = following_list.lastChild;
+	last.scrollIntoView();
+	window.addEventListener("load", function() {
+        while (last != following_list.lastChild) {
+          window.addEventListener("load", function() {
+            last = following_list.lastChild;
+            last.scrollIntoView();
+          });
+        }
+      });
+
+"""
 
 print("got here")
 
