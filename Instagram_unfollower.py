@@ -58,7 +58,6 @@ browser.get(url)
 
 # Find the button whose div contains the text " In", as it could be "Log In" or
 #   "Sign In" in the future
-# login_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/nav/div[2]/div/div/div[3]/div/div[2]/div[1]/a/button/div"
 login_XPATH = "//button/div[contains(text(), ' In')]"
 login = 0
 # Wait up to 10 seconds to find login button to account for page loading
@@ -76,9 +75,7 @@ if isinstance(login, int):
 
 login.click()
 
-#username_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/main/div/div/div[1]/div[2]/form/div/div[1]/div/label/input"
 username_XPATH = "//input[@name='username']"
-#password_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/section/main/div/div/div[1]/div[2]/form/div/div[2]/div/label/input"
 password_XPATH = "//input[@name='password']"
 
 for i in range(10):
@@ -103,7 +100,6 @@ password_field.send_keys(password + Keys.ENTER)
 # Browser will take some time to load next page
 
 # Don't save login info:
-# not_now_XPATH = "/html/body/div[2]/div/div/div/div[1]/div/div/div/div[1]/div[1]/div[2]/section/main/div/div/div/div/button"
 not_now_XPATH = "//button[text()='Not Now']"
 for i in range(10):
     try:
@@ -151,9 +147,6 @@ except:
 
 following.click()
 
-# following_list_XPATH = "/html/body/div[2]/div/div/div/div[2]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div"
-# List of usernames of following accounts
-accounts_list = []
 following_list_XPATH = "//button[div/div[text()='Following']]/../../.."
 for i in range(5):
     try:
@@ -169,6 +162,8 @@ except:
     print("Could not find following list")
 
 # JavaScript to scroll until all following accounts are revealed
+# Use a 1-second interval because it takes about 1 second for more accounts to
+#   load on the list. Not necessary but will save work
 js = """
         const following_list_XPATH = "//button[div/div[text()='Following']]/../../..";
 	const following_list = document.evaluate(following_list_XPATH, document).iterateNext();
@@ -189,13 +184,29 @@ browser.execute_script(js)
 try:
     children = following_list.find_elements(By.XPATH, "./child::div")
     while len(children) < following_count:
+        # Sleep to match JavaScript interval
         time.sleep(1)
         children = following_list.find_elements(By.XPATH, "./child::div")
         print("Number of children: %d" %len(children))
 except:
     print("Could not find children of following_list")
 
-print("got here")
+# List of usernames of following accounts
+handle_list = []
+print("Getting usernames...")
+handle_XPATH = ".//a/span/child::div"
+for child in children:
+    try:
+        handle = child.find_element(By.XPATH, handle_XPATH)
+        handle = handle.text
+        if "\nVerified" in handle:
+            handle = handle[:handle.index("\nVerified")]
+        print(handle)
+        handle_list.append(handle)
+    except:
+        print("Could not find handle")
+
+print("GOT HERE")
 
 file = open(accounts)
 # open(accounts, 'w') for write mode
