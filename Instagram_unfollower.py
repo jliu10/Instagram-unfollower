@@ -170,20 +170,20 @@ except:
 
 # JavaScript to scroll until all following accounts are revealed
 js = """
-        let following_list_XPATH = "//button[div/div[text()='Following']]/../../..";
-	let following_list = document.evaluate(following_list_XPATH, document).iterateNext();
-	let last = following_list.lastChild;
-	last.scrollIntoView();
-	window.addEventListener("load", function() {
-        while (last != following_list.lastChild) {
-          window.addEventListener("load", function() {
-            last = following_list.lastChild;
-            last.scrollIntoView();
-          });
-        }
-      });
+        const following_list_XPATH = "//button[div/div[text()='Following']]/../../..";
+	const following_list = document.evaluate(following_list_XPATH, document).iterateNext();
+	const intervalId = setInterval(() => {
+            const goOn = following_list.children.length < %s
+            if (goOn) {
+                following_list.lastChild.scrollIntoView();
+              } else {
+                clearInterval(intervalId);
+              }
+        }, 3000);
+""" % following_count
+print("Executing script:\n%s" %js)
 
-"""
+browser.execute_script(js)
 
 print("got here")
 
