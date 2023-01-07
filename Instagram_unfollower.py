@@ -206,6 +206,22 @@ for child in children:
     except:
         print("Could not find handle")
 
+for handle in handle_list:
+    url = ("https://www.instagram.com/%s/" %handle)
+    browser.get(url)
+    following_XPATH = ("//a[@href='/%s/following/']//child::div" %handle)
+    # While the "following" link isn't loaded
+    while True:
+        try:
+            following = browser.find_element(By.XPATH, following_XPATH)
+            print("Found @%s's 'following' link" %handle)
+            break
+        except:
+            print("Waiting for @%s's page to load..." %handle)
+            # Give the page time to load
+            time.sleep(1)
+    following.click()
+
 print("GOT HERE")
 
 file = open(accounts)
