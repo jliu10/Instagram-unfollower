@@ -68,7 +68,7 @@ for i in range(10):
 #    print("iteration %d" %i)
     try:
         login = browser.find_element(By.XPATH, login_XPATH)
-        print("login found")
+        print("Found login button")
         break
     except:
         time.sleep(1)
@@ -211,8 +211,10 @@ for child in children:
 
 guilty_accounts = []
 for handle in handle_list:
+    print("Analyzing @%s:" %handle)
     # If username is whitelisted, don't do anything
     if handle in whitelist:
+        print("\tAccount is whitelisted")
         continue
 
     # TESTING
@@ -227,17 +229,17 @@ for handle in handle_list:
     while True:
         try:
             following = browser.find_element(By.XPATH, following_XPATH)
-            print("Found @%s's 'following' link" %handle)
+            print("\tFound @%s's 'following' link" %handle)
             break
         except:
-            print("Waiting for @%s's page to load..." %handle)
+            print("\tWaiting for @%s's page to load..." %handle)
             # Give the page time to load
             time.sleep(1)
     try:
         following.click()
-        print("Clicked 'following'")
+        print("\tClicked 'following'")
     except:
-        print("Could not find @%s's 'following' link")
+        print("\tCould not find @%s's 'following' link")
         continue
 
     # If an account follows you, the first account in its following list should
@@ -248,31 +250,35 @@ for handle in handle_list:
     for i in range(5):
         try:
             first_account = browser.find_element(By.XPATH, first_account_XPATH)
-            print("Found first account in following list")
+            print("\tFound first account in following list")
             break
         except:
             time.sleep(1)
     try:
         type(first_account)
     except:
-        print("Could not find first account in following list")
+        print("\tCould not find first account in following list")
     href = first_account.get_attribute("href")
-    print("href = %s" %href)
+    # print("\thref = %s" %href)
     
     # Extract username from href
     href = href[:-1]
     href = href[href.rindex('/')+1:]
-    print("Username of first account: %s" %href)
+    print("\tUsername of first account: %s" %href)
 
     # If the first account isn't yourself, it means this person isn't following
     #   you
     if href != username:
-        print("@%s DOES NOT follow you back" %handle)
+        print("\t@%s DOES NOT follow you back" %handle)
         guilty_accounts.append(handle)
     else:
-        print("@%s follows you back" %handle)
+        print("\t@%s follows you back" %handle)
     
     #break
+
+print("Guilty accounts:")
+for a in guilty_accounts:
+    print("\t@%s" %a)
 
 print("GOT HERE")
 
