@@ -48,6 +48,9 @@ print(accounts, "is a valid file")
 ##accounts.write_text("")
 ##print("Contents of accounts.txt: ", accounts.read_text())
 
+# List of accounts to exempt from unfollowing
+whitelist = []
+
 url = ("https://www.instagram.com/%s/" %username)
 
 # Open browser to user's Instagram page. It will be logged out
@@ -168,7 +171,7 @@ js = """
         const following_list_XPATH = "//button[div/div[text()='Following']]/../../..";
 	const following_list = document.evaluate(following_list_XPATH, document).iterateNext();
 	const intervalId = setInterval(() => {
-            const goOn = following_list.children.length < %s
+            const goOn = following_list.children.length < %d
             if (goOn) {
                 following_list.lastChild.scrollIntoView();
               } else {
@@ -206,9 +209,19 @@ for child in children:
     except:
         print("Could not find handle")
 
+guilty_accounts = []
 for handle in handle_list:
+    # If username is whitelisted, don't do anything
+    if handle in whitelist:
+        continue
+
+    # TESTING
+    #if handle != "nav":
+    #    continue
+    
     url = ("https://www.instagram.com/%s/" %handle)
     browser.get(url)
+    
     following_XPATH = ("//a[@href='/%s/following/']//child::div" %handle)
     # While the "following" link isn't loaded
     while True:
@@ -220,7 +233,46 @@ for handle in handle_list:
             print("Waiting for @%s's page to load..." %handle)
             # Give the page time to load
             time.sleep(1)
-    following.click()
+    try:
+        following.click()
+        print("Clicked 'following'")
+    except:
+        print("Could not find @%s's 'following' link")
+        continue
+
+    # If an account follows you, the first account in its following list should
+    #   be your account
+    
+    # First account in following list
+    first_account_XPATH = "//div[@role='dialog']//a"
+    for i in range(5):
+        try:
+            first_account = browser.find_element(By.XPATH, first_account_XPATH)
+            print("Found first account in following list")
+            break
+        except:
+            time.sleep(1)
+    try:
+        type(first_account)
+    except:
+        print("Could not find first account in following list")
+    href = first_account.get_attribute("href")
+    print("href = %s" %href)
+    
+    # Extract username from href
+    href = href[:-1]
+    href = href[href.rindex('/')+1:]
+    print("Username of first account: %s" %href)
+
+    # If the first account isn't yourself, it means this person isn't following
+    #   you
+    if href != username:
+        print("@%s DOES NOT follow you back" %handle)
+        guilty_accounts.append(handle)
+    else:
+        print("@%s follows you back" %handle)
+    
+    #break
 
 print("GOT HERE")
 
