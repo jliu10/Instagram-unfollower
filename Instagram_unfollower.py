@@ -25,6 +25,7 @@ from selenium.webdriver.common.keys import Keys
 #   - Toggle need for CONFIRM (unfollow without asking for confirmation, so
 #       user doesn't have to wait for script to get Guilty accounts)
 #   - Customize timeout length
+#   - Input firefox.exe path
 
 print("hello world")
 print(Path.cwd())
@@ -135,7 +136,8 @@ except:
 try:
     # By knowing the following count, we can keep scrolling the following list
     #   until we revealed this many list child elementts
-    following_count = int(following_count.text)
+    # Remove commas from number
+    following_count = int((following_count.text).replace(',',''))
     print("Retrieved following count: %d" %following_count)
 except:
     print("Could not retreive following count")
@@ -279,6 +281,68 @@ for handle in handle_list:
 print("Guilty accounts:")
 for a in guilty_accounts:
     print("\t@%s" %a)
+
+# Unfollows handle's account, waiting up to timeout seconds before timing out.
+#   Returns true if successful at unfollowing, false otherwise
+def unfollow_account(handle: str, timeout: int) -> bool:
+    # If CONFIRM is off, unfollow should be called right after determining that
+    #   this account doesn't follow you back. Thus, the browser should be at
+    #   "https://www.instagram.com/$s/following" %handle
+    if browser.current_url == ("https://www.instagram.com/%s/following/" %handle):
+        x_XPATH = "//div[@role='dialog']//button"
+        for i in range(timeout):
+            try:
+                x = browser.find_element(By.XPATH, x_XPATH)
+                print("Found X button")
+                break
+            except:
+                time.sleep(1)
+        try:
+            type(x)
+            # Clicking the X is faster than reentering the browser URL
+            x.click()
+        except:
+            print("Could not find X button")
+            return False
+    else:
+        browser.get("https://www.instagram.com/%s/" %handle)
+    
+    following_button_XPATH = "//button/div/div[text()='Following']"
+    for i in range(timeout):
+        try:
+            following_button = browser.find_element(By.XPATH, following_button_XPATH)
+            print("Found 'Following' button")
+            break            
+        except:
+            time.sleep(1)
+    try:
+        type(following_button)
+    except:
+        print("Could not find 'Following' button")
+        return False
+    following_button.click()
+    
+    unfollow_XPATH = "//div[@role='dialog']//div[text()='Unfollow']"
+    for i in range(timeout):
+        try:
+            unfollow = browser.find_element(By.XPATH, unfollow_XPATH)
+            print("Found 'Unfollow' button")
+            break            
+        except:
+            time.sleep(1)
+    try:
+        type(unfollow)
+    except:
+        print("Could not find 'Unfollow' button")
+        return False
+    unfollow.click()
+    return True
+
+for guilty in guilty_accounts:
+    if unfollow_account(guilty, 5):
+        print("Successfully unfollowed @%s" %guilty)
+    else:
+        print("Could not unfollow @%s" %guilty)
 
 print("GOT HERE")
 
