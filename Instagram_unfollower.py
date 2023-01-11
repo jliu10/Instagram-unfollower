@@ -4,6 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+import pyinputplus as pyip
 
 # GOAL:
 #   - Log into desired Instagram account with user-inputted username and
@@ -212,6 +213,7 @@ for child in children:
         print("Could not find handle")
 
 guilty_accounts = []
+# Analyze each account that you're following:
 for handle in handle_list:
     print("Analyzing @%s:" %handle)
     # If username is whitelisted, don't do anything
@@ -225,10 +227,11 @@ for handle in handle_list:
     
     url = ("https://www.instagram.com/%s/" %handle)
     browser.get(url)
-    
+
+# ACCOUNT FOR ACCOUNT FOLLOWING 0 ACCOUNTS  
     following_XPATH = ("//a[@href='/%s/following/']//child::div" %handle)
     # While the "following" link isn't loaded
-    while True:
+    for i in range(10):
         try:
             following = browser.find_element(By.XPATH, following_XPATH)
             print("\tFound @%s's 'following' link" %handle)
@@ -317,10 +320,11 @@ def unfollow_account(handle: str, timeout: int) -> bool:
             time.sleep(1)
     try:
         type(following_button)
+        following_button.click()
+        print("Clicked 'Following' button")
     except:
         print("Could not find 'Following' button")
         return False
-    following_button.click()
     
     unfollow_XPATH = "//div[@role='dialog']//div[text()='Unfollow']"
     for i in range(timeout):
@@ -338,11 +342,14 @@ def unfollow_account(handle: str, timeout: int) -> bool:
     unfollow.click()
     return True
 
-for guilty in guilty_accounts:
-    if unfollow_account(guilty, 5):
-        print("Successfully unfollowed @%s" %guilty)
-    else:
-        print("Could not unfollow @%s" %guilty)
+unfollow_all = pyip.inputYesNo(prompt="Unfollow guilty accounts? ")
+
+if unfollow_all == "yes":
+    for guilty in guilty_accounts:
+        if unfollow_account(guilty, 5):
+            print("Successfully unfollowed @%s" %guilty)
+        else:
+            print("Could not unfollow @%s" %guilty)
 
 print("GOT HERE")
 
