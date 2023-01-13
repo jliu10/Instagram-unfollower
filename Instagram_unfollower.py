@@ -228,14 +228,22 @@ for handle in handle_list:
     url = ("https://www.instagram.com/%s/" %handle)
     browser.get(url)
 
-# ACCOUNT FOR ACCOUNT FOLLOWING 0 ACCOUNTS  
-    following_XPATH = ("//a[@href='/%s/following/']//child::div" %handle)
+    following_XPATH = ("//header/section/ul/li[3]")
+    link_XPATH = "./a"
+    # Indicate whether account follows 0 accounts
+    no_accounts = False
     # While the "following" link isn't loaded
     for i in range(10):
         try:
             following = browser.find_element(By.XPATH, following_XPATH)
-            print("\tFound @%s's 'following' link" %handle)
-            break
+            try:
+                link = following.find_element(By.XPATH, link_XPATH)
+                print("\tFound @%s's 'following' link" %handle)
+                break
+            except:
+                print("\t@%s doesn't follow any accounts" %handle)
+                no_accounts = True
+                break
         except:
             print("\tWaiting for @%s's page to load..." %handle)
             # Give the page time to load
@@ -245,6 +253,10 @@ for handle in handle_list:
         print("\tClicked 'following'")
     except:
         print("\tCould not find @%s's 'following' link")
+        continue
+
+    if no_accounts:
+        guilty_accounts.append(handle)
         continue
 
     # If an account follows you, the first account in its following list should
