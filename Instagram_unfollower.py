@@ -30,28 +30,29 @@ import pyinputplus as pyip
 
 print("hello world")
 print(Path.cwd())
+shelfFile = shelve.open("mydata")
+wl = []
+shelfFile["whitelist"] = wl
+shelfFile.close()
 
 def menu():
     text = """******************** MENU ********************
     Welcome to Instagram Unfollower (made by Justin Liu).
-    Please select an option below to continue.
-    (1) About
-    (2) Edit whitelist
-    (3) Run unfollowing script
+    
     NOTE: You can exit the entire program at any point by entering Ctrl + C in the Python shell
     """
     print(text)
-    choice = pyip.inputChoice(prompt="Choose a number: ", choices=['1','2','3'])
+    choices = ["About",
+               "Manage whitelist",
+               "Run unfollowing script"]
+    choice = pyip.inputMenu(prompt="What would you like to do?\n", choices=choices, numbered=True)
 
-    if choice == '1':
-        print("You have chosen (1) About")
-        about()
-    elif choice == '2':
-        print("You have chosen (2) Edit whitelist")
-        whitelist()
-    elif choice == '3':
-        print("You have chosen (3) Run unfollowing script")
-        script()
+    if choice == choices[0]:
+        return about()
+    elif choice == choices[1]:
+        return whitelist()
+    elif choice == choices[2]:
+        return script()
 
 def about():
     info = """******************** ABOUT ********************
@@ -61,15 +62,43 @@ def about():
     while True:
         if pyip.inputYesNo() == 'yes':
             break
-    menu()
+    return menu()
 
 def whitelist():
     info = """******************** WHITELIST ********************
+    Here, you can add/remove accounts from the whitelist. Whitelisted accounts
+    are exempt from being unfollowed by the unfollowing script. You may want to
+    whitelist accounts such as celebrities. The whitelist should be saved even
+    aftering exiting this program.
 """
     print(info)
+    choices = ["View current whitelist",
+               "Edit whitelist",
+               "Back to menu"]
+    choice = pyip.inputMenu(prompt="What would you like to do?\n", choices=choices, numbered=True)
+    if choice == choices[0]:
+        shelfFile = shelve.open("mydata")
+        print("Current whitelist:")
+        for a in shelfFile[wl]:
+            print("\t" + a)
+        shelfFile.close()
+        print("Go back?")
+        while True:
+            if pyip.inputYesNo() == 'yes':
+                break
+        return whitelist()
+    elif choice == choices[1]:
+        choice2 = pyip.inputMenu(prompt="What what you like to do with the whitelist?\n", choices=["Add accounts","Remove accounts"], numbered=True)
+        if choice2 == "Add accounts":
+           pass 
+        elif choice2 == "Remove accounts":
+            pass
+    elif choice == choices[2]:
+        return menu()
     
 
 def script():
+    print("******************** STARTING SCRIPT ********************")
     username = input("Enter your Instagram username: ")
     # ACCOUNT FOR WEIRD INPUTS
     password = input("Enter your the password for @%s: " %username)
