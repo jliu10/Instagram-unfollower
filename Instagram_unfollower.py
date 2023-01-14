@@ -11,7 +11,7 @@ import pyinputplus as pyip
 #       password
 #   - Access and collect list of Following
 #   - Access each Following account and see if it Follows Back
-#       - If not, then add to list of Guilty accounts (accounts.txt)
+#       - If not, then add to list of Guilty accounts
 #           - If CONFIRM is off, immediately Unfollow as well
 #   - Print list of Guilty accounts
 # EDGE CASES:
@@ -31,8 +31,8 @@ import pyinputplus as pyip
 print("hello world")
 print(Path.cwd())
 shelfFile = shelve.open("mydata")
-wl = []
-shelfFile["whitelist"] = wl
+if not shelfFile["whitelist"]:
+    shelfFile["whitelist"] = []
 shelfFile.close()
 
 def menu():
@@ -79,8 +79,8 @@ def whitelist():
     if choice == choices[0]:
         shelfFile = shelve.open("mydata")
         print("Current whitelist:")
-        for a in shelfFile[wl]:
-            print("\t" + a)
+        for a in shelfFile["whitelist"]:
+            print("\t@" + a)
         shelfFile.close()
         print("Go back?")
         while True:
@@ -90,7 +90,20 @@ def whitelist():
     elif choice == choices[1]:
         choice2 = pyip.inputMenu(prompt="What what you like to do with the whitelist?\n", choices=["Add accounts","Remove accounts"], numbered=True)
         if choice2 == "Add accounts":
-           pass 
+            accountsToAdd = input("Enter the usernames of each account you would like to add, separated by spaces:\n")
+            accountsToAdd = accountsToAdd.split(' ')
+            # Remove empty string from list
+            while '' in accountsToAdd:
+                accountsToAdd.remove('')
+            shelfFile = shelve.open("mydata")
+            for a in accountsToAdd:
+                if a not in shelfFile["whitelist"]:
+                    print("\tAdded @%s to whitelist" %a)
+                    temp = shelfFile["whitelist"]
+                    temp.append(a.lower())
+                    shelfFile["whitelist"] = temp
+            shelfFile.close()
+            return whitelist()
         elif choice2 == "Remove accounts":
             pass
     elif choice == choices[2]:
@@ -102,21 +115,6 @@ def script():
     username = input("Enter your Instagram username: ")
     # ACCOUNT FOR WEIRD INPUTS
     password = input("Enter your the password for @%s: " %username)
-
-
-    accounts = Path.cwd() / "accounts.txt"
-    if not accounts.is_file():
-        print(accounts, "is NOT a valid file")
-        raise FileNotFoundError()
-
-    print(accounts, "is a valid file")
-
-    ##print("Contents of accounts.txt: ", accounts.read_text())
-    ##accounts.write_text("Rick roll")
-    ##print("Contents of accounts.txt: ", accounts.read_text())
-    ### Clear accounts.txt
-    ##accounts.write_text("")
-    ##print("Contents of accounts.txt: ", accounts.read_text())
 
     # List of accounts to exempt from unfollowing
     whitelist = []
@@ -434,11 +432,3 @@ def unfollow_account(handle: str, timeout: int) -> bool:
     return True
 
 menu()
-
-# file = open(accounts)
-# open(accounts, 'w') for write mode
-# open(accounts, 'a') for append mode
-# file.close()
-
-# Use shelve module for whitelisted accounts
-# To add to whitelist, prompt the user to input a single account name
