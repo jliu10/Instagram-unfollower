@@ -28,15 +28,13 @@ import pyinputplus as pyip
 #   - Customize timeout length
 #   - Input firefox.exe path
 
-print("hello world")
-print(Path.cwd())
 shelfFile = shelve.open("mydata")
 if not shelfFile["whitelist"]:
     shelfFile["whitelist"] = []
 shelfFile.close()
 
 def menu():
-    text = """******************** MENU ********************
+    text = """\n******************** MENU ********************
     Welcome to Instagram Unfollower (made by Justin Liu).
     
     NOTE: You can exit the entire program at any point by entering Ctrl + C in the Python shell
@@ -55,7 +53,7 @@ def menu():
         return script()
 
 def about():
-    info = """******************** ABOUT ********************
+    info = """\n******************** ABOUT ********************
 """
     print(info)
     print("Go back to menu?")
@@ -65,7 +63,7 @@ def about():
     return menu()
 
 def whitelist():
-    info = """******************** WHITELIST ********************
+    info = """\n******************** WHITELIST ********************
     Here, you can add/remove accounts from the whitelist. Whitelisted accounts
     are exempt from being unfollowed by the unfollowing script. You may want to
     whitelist accounts such as celebrities. The whitelist should be saved even
@@ -90,7 +88,7 @@ def whitelist():
     elif choice == choices[1]:
         choice2 = pyip.inputMenu(prompt="What what you like to do with the whitelist?\n", choices=["Add accounts","Remove accounts"], numbered=True)
         if choice2 == "Add accounts":
-            accountsToAdd = input("Enter the usernames of each account you would like to add, separated by spaces:\n")
+            accountsToAdd = input("Enter the usernames of each account you would like to add, separated by spaces (e.g. user1 user2):\n")
             accountsToAdd = accountsToAdd.split(' ')
             # Remove empty string from list
             while '' in accountsToAdd:
@@ -98,26 +96,39 @@ def whitelist():
             shelfFile = shelve.open("mydata")
             for a in accountsToAdd:
                 if a not in shelfFile["whitelist"]:
-                    print("\tAdded @%s to whitelist" %a)
                     temp = shelfFile["whitelist"]
                     temp.append(a.lower())
                     shelfFile["whitelist"] = temp
+                    print("\tAdded @%s to whitelist" %a)
+                else:
+                    print("\t@%s already in whitelist" %a)
             shelfFile.close()
             return whitelist()
         elif choice2 == "Remove accounts":
-            pass
+            accountsToRemove = input("Enter the usernames of each account you would like to remove, separated by spaces (e.g. user1 user2):\n")
+            accountsToRemove = accountsToRemove.split(' ')
+            while '' in accountsToRemove:
+                accountsToRemove.remove('')
+            shelfFile = shelve.open("mydata")
+            for a in accountsToRemove:
+                if a in shelfFile["whitelist"]:
+                    temp = shelfFile["whitelist"]
+                    temp.remove(a.lower())
+                    shelfFile["whitelist"] = temp
+                    print("\tRemoved @%s from whitelist" %a)
+                else:
+                    print("\t@%s not in whitelist" %a)
+            shelfFile.close()
+            return whitelist()
     elif choice == choices[2]:
         return menu()
     
 
 def script():
-    print("******************** STARTING SCRIPT ********************")
+    print("\n******************** STARTING SCRIPT ********************")
     username = input("Enter your Instagram username: ")
     # ACCOUNT FOR WEIRD INPUTS
     password = input("Enter your the password for @%s: " %username)
-
-    # List of accounts to exempt from unfollowing
-    whitelist = []
 
     url = ("https://www.instagram.com/%s/" %username)
 
@@ -279,18 +290,15 @@ def script():
             print("Could not find handle")
 
     guilty_accounts = []
+    shelfFile = shelve.open("mydata")
     # Analyze each account that you're following:
     for handle in handle_list:
         print("Analyzing @%s:" %handle)
         # If username is whitelisted, don't do anything
-        if handle in whitelist:
+        if handle in shelfFile["whitelist"]:
             print("\tAccount is whitelisted")
             continue
 
-        # TESTING
-        #if handle != "nav":
-        #    continue
-        
         url = ("https://www.instagram.com/%s/" %handle)
         browser.get(url)
 
@@ -358,6 +366,7 @@ def script():
             print("\t@%s follows you back" %handle)
         
         #break
+    shelfFile.close()
 
     print("Guilty accounts:")
     for a in guilty_accounts:
