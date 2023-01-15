@@ -1,4 +1,6 @@
 # Instagram-unfollower
+Shoutout to https://automatetheboringstuff.com for teaching me how to make this.
+
 Tired of losers on Instagram who unfollow you, but keep you as a follower? This script will fix that by automatically unfollowing such Instagram accounts for you. Let it run in the background while you do anything else. You are also able to whitelist accounts that don't follow you but you may want to keep following, i.e. celebrities.
 
 Notes:
