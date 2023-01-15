@@ -5,6 +5,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import pyinputplus as pyip
+from typing import List
 
 # GOAL:
 #   - Log into desired Instagram account with user-inputted username and
@@ -33,9 +34,12 @@ if not shelfFile["whitelist"]:
     shelfFile["whitelist"] = []
 shelfFile.close()
 
+options = Options()
+options.binary_location = r"/Applications/Firefox 2.app/Contents/MacOS/firefox"
+
 def menu():
     text = """\n******************** MENU ********************
-    Welcome to Instagram Unfollower (made by Justin Liu).
+    Welcome to Instagram Unfollower (made by Justin Liu). If you encounter any issues, feel free to send an email to exovitejl@gmail.com
     
     NOTE: You can exit the entire program at any point by entering Ctrl + C in the Python shell
     """
@@ -56,11 +60,9 @@ def about():
     info = """\n******************** ABOUT ********************
 """
     print(info)
-    print("Go back to menu?")
     while True:
-        if pyip.inputYesNo() == 'yes':
-            break
-    return menu()
+        if pyip.inputYesNo(prompt="Go back to menu? (y/n) ") == 'yes':
+            return menu()
 
 def whitelist():
     info = """\n******************** WHITELIST ********************
@@ -80,9 +82,8 @@ def whitelist():
         for a in shelfFile["whitelist"]:
             print("\t@" + a)
         shelfFile.close()
-        print("Go back?")
         while True:
-            if pyip.inputYesNo() == 'yes':
+            if pyip.inputYesNo(prompt="Go back? (y/n) ") == 'yes':
                 break
         return whitelist()
     elif choice == choices[1]:
@@ -126,15 +127,23 @@ def whitelist():
 
 def script():
     print("\n******************** STARTING SCRIPT ********************")
+
     username = input("Enter your Instagram username: ")
     # ACCOUNT FOR WEIRD INPUTS
     password = input("Enter your the password for @%s: " %username)
 
+    lazyMode = pyip.inputYesNo(prompt="""
+Lazy mode: If lazy mode is on, the script will automatically unfollow all
+accounts not following you back. Turn lazy mode off if you want to review
+these accounts before unfollowing. Turn on lazy mode? (y/n) """)
+    if lazyMode == "yes":
+        lazyMode = True
+    else:
+        lazyMode = False
+
     url = ("https://www.instagram.com/%s/" %username)
 
     # Open browser to user's Instagram page. It will be logged out
-    options = Options()
-    options.binary_location = r"/Applications/Firefox 2.app/Contents/MacOS/firefox"
     browser = webdriver.Firefox(options=options)
     browser.get(url)
 
@@ -368,24 +377,53 @@ def script():
         #break
     shelfFile.close()
 
-    print("Guilty accounts:")
+    if lazyMode:
+        return unfollow_all(guilty_accounts, browser)
+
+    print("Accounts guilty of not following you back:")
     for a in guilty_accounts:
         print("\t@%s" %a)
 
-    unfollow_all = pyip.inputYesNo(prompt="Unfollow guilty accounts? ")
-    if unfollow_all == "yes":
-        for guilty in guilty_accounts:
-            if unfollow_account(guilty, 5):
-                print("Successfully unfollowed @%s" %guilty)
-            else:
-                print("Could not unfollow @%s" %guilty)
+    choices = ["Stop here",
+               "Unfollow all guilty accounts",
+               "Review each guilty account"]
+    choice = pyip.inputMenu(prompt="What would you like to do?\n", choices=choices, numbered=True)
+    if choice == choices[0]:
+        print("Thank you for using this script.")
+        return menu()
+    elif choice == choices[1]:
+        return unfollow_all(guilty_accounts, browser)
+    elif choice == choices[2]:
+        return review(guilty_accounts, browser)
 
-    print("GOT HERE")
+def unfollow_all(accounts: List[str], browser) -> None:
+    for a in accounts:
+        if unfollow_account(a, 10, browser):
+                print("Successfully unfollowed @%s" %a)
+        else:
+                print("Could not unfollow @%s" %a)
+    return menu()
 
+def review(accounts: List[str], browser) -> None:
+    for a in accounts:
+        choice = pyip.inputYesNo(prompt="Unfollow @%s? (y/n) " %a)
+        if choice == "yes":
+            unfollow_account(a, 10, browser)
+        else:
+            choice2 = pyip.inputYesNo(prompt="Add @%s to whitelist? (y/n) " %a)
+            if choice2 == "yes":
+                shelfFile = shelve.open("mydata")
+                temp = shelfFile["whitelist"]
+                if a not in temp:
+                    temp.append(a)
+                    shelfFile["whitelist"] = temp
+                    print("\tAdded @%s to whitelist" %a)
+                shelfFile.close()
+    return menu()
 
 # Unfollows handle's account, waiting up to timeout seconds before timing out.
 #   Returns true if successful at unfollowing, false otherwise
-def unfollow_account(handle: str, timeout: int) -> bool:
+def unfollow_account(handle: str, timeout: int, browser) -> bool:
     # If CONFIRM is off, unfollow should be called right after determining that
     #   this account doesn't follow you back. Thus, the browser should be at
     #   "https://www.instagram.com/$s/following" %handle
