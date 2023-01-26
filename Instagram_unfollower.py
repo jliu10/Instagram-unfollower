@@ -1,5 +1,5 @@
 from pathlib import Path
-import shelve, bs4, requests, lxml, time
+import shelve, lxml, time
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
@@ -35,7 +35,34 @@ if not shelfFile["whitelist"]:
 shelfFile.close()
 
 options = Options()
-options.binary_location = r"/Applications/Firefox 2.app/Contents/MacOS/firefox"
+# options.binary_location = r"/Applications/Firefox 2.app/Contents/MacOS/firefox"
+options.binary_location = r""
+
+readme = open("README.md")
+
+def get_exe():
+    text = """
+Hello. Before the actual Instagram script can run, you'll need to have the
+Mozilla Firefox browser installed. Also, the script will need the location of
+the Firefox executable file so that the script can use the browser. More
+precisely, it'll need the absolute path of the Firefox executable file. If you
+don't know how to find it, please quickly google it. This is the most
+complicated thing you'll have to do for this program.
+\tOn Mac, it might look something like this:
+\t\t/Applications/Firefox.app/Contents/MacOS/firefox
+\tOn Windows, it might look like this:
+\t\tC:\Program Files\Mozilla Firefox\firefox.exe
+
+If it's wrong, you'll know when you try to run the unfollowing script.
+"""
+    print(text)
+    path = input("Absolute path of firefox executable: ")
+    shelfFile = shelve.open("mydata")
+    shelfFile["exe"] = path
+    options.binary_location = path
+    shelfFile.close()
+    print("Executable path: %s" %path)
+    return menu()
 
 def menu():
     text = """\n******************** MENU ********************
@@ -46,7 +73,8 @@ def menu():
     print(text)
     choices = ["About",
                "Manage whitelist",
-               "Run unfollowing script"]
+               "Run unfollowing script",
+               "Edit executable location"]
     choice = pyip.inputMenu(prompt="What would you like to do?\n", choices=choices, numbered=True)
 
     if choice == choices[0]:
@@ -55,11 +83,14 @@ def menu():
         return whitelist()
     elif choice == choices[2]:
         return script()
+    elif choice == choices[3]:
+        return get_exe()
 
 def about():
     info = """\n******************** ABOUT ********************
 """
     print(info)
+    print(readme.read())
     while True:
         if pyip.inputYesNo(prompt="Go back to menu? (y/n) ") == 'yes':
             return menu()
@@ -380,7 +411,7 @@ these accounts before unfollowing. Turn on lazy mode? (y/n) """)
     if lazyMode:
         return unfollow_all(guilty_accounts, browser)
 
-    print("Accounts guilty of not following you back:")
+    print("%d accounts guilty of not following you back:" %len(guilty_accounts))
     for a in guilty_accounts:
         print("\t@%s" %a)
 
@@ -478,4 +509,22 @@ def unfollow_account(handle: str, timeout: int, browser) -> bool:
     unfollow.click()
     return True
 
-menu()
+shelfFile = shelve.open("mydata")
+try:
+    options.binary_location = shelfFile["exe"]
+    shelfFile.close()
+    menu()
+except:
+    shelfFile.close()
+    get_exe()
+
+'''
+if not shelfFile["exe"]:
+    # shelfFile["exe"] = ""
+    shelfFile.close()
+    get_exe()
+else:
+    options.binary_location = shelfFile["exe"]
+    shelfFile.close()
+    menu()
+'''
