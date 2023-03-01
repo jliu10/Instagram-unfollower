@@ -30,8 +30,14 @@ from typing import List
 #   - Input firefox.exe path
 
 shelfFile = shelve.open("mydata")
-if not shelfFile["whitelist"]:
+try:
+    shelfFile["whitelist"]
+except KeyError:
     shelfFile["whitelist"] = []
+
+# if not shelfFile["whitelist"]:
+#    shelfFile["whitelist"] = []
+    
 shelfFile.close()
 
 options = Options()
@@ -514,7 +520,7 @@ try:
     options.binary_location = shelfFile["exe"]
     shelfFile.close()
     menu()
-except:
+except KeyError:
     shelfFile.close()
     get_exe()
 
